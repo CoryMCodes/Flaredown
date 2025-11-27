@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": "",
   "scripts": {
-    "postinstall": "./node_modules/bower/bin/bower install",
+    "postinstall": "patch-package && ./node_modules/bower/bin/bower install",
     "build": "ember build",
     "lint:js": "eslint ./*.js app config lib server tests",
     "start": "ember serve --port 4300",
@@ -67,15 +67,18 @@
     "ember-time-field": "^0.3.0",
     "ember-truth-helpers": "1.2.0",
     "eslint-plugin-ember": "^5.0.0",
+    "fs-extra": "^4.0.3",
     "loader.js": "^4.2.3",
+    "patch-package": "^8.0.1",
     "phantomjs-prebuilt": "^2.1.16",
     "sass": "^1.68.0",
-    "torii": "^0.8.0"
+    "torii": "^0.8.0",
+    "webpack": "^5.103.0"
   },
   "engines": {
     "bower": "1.x",
     "node": "14.x",
-    "npm": "7.x"
+    "npm": "6.x"
   },
   "ember-addon": {
     "paths": [
