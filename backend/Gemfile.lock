@@ -152,7 +152,7 @@ GEM
     database_cleaner-mongoid (2.0.1)
       database_cleaner-core (~> 2.0.0)
       mongoid
-    date (3.3.4)
+    date (3.5.0)
     descendants_tracker (0.0.4)
       thread_safe (~> 0.3, >= 0.3.1)
     devise (4.9.4)
@@ -281,7 +281,7 @@ GEM
       andand
       kdtree
       require_all
-    net-imap (0.4.14)
+    net-imap (0.4.20)
       date
       net-protocol
     net-pop (0.1.2)
