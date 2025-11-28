@@ -25,3 +25,6 @@
 /coverage
 
 /public/uploads/tmp
+
+# Ignore Claude Code files
+.claude/
