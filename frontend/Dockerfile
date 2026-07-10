@@ -12,9 +12,12 @@ ENV CHROME_BIN=/usr/bin/chromium
 ENV OPENSSL_CONF=/dev/null
 
 COPY package*.json bower.json .bowerrc .npmrc ./
+COPY bin/docker-entrypoint /usr/local/bin/frontend-entrypoint
 
-RUN npm install --unsafe-perm
+RUN chmod +x /usr/local/bin/frontend-entrypoint
 
 COPY . .
+
+ENTRYPOINT ["/usr/local/bin/frontend-entrypoint"]
 
 CMD ["npm", "start"]

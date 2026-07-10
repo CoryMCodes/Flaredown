@@ -23,6 +23,31 @@ Alternatively, you can run the app using the `make` commands available: `make he
 
 If you want to run the application on your own machine see the next sections on dependency installations.
 
+### Running with Docker
+
+Populate the necessary environment parameters:
+
+```bash
+cp backend/env-example backend/.env
+cp backend/env-example frontend/.env
+```
+
+Set `FACEBOOK_APP_ID` in `frontend/.env` if you want to use Facebook login locally.
+
+Set up the database:
+
+```bash
+docker compose --profile tools run --rm app-setup
+```
+
+Start the application:
+
+```bash
+docker compose --profile dev up
+```
+
+Visit your app at [http://localhost:4300](http://localhost:4300).
+
 ### Running natively
 
 #### Mac Prerequisites

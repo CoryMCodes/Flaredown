@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+cd /app
+
+if [ ! -x ./node_modules/.bin/ember ]; then
+  npm install --unsafe-perm
+fi
+
+exec "$@"

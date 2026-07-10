@@ -43,6 +43,8 @@ namespace :app do
       Rake::Task["db:drop"].invoke
       Rake::Task["db:create"].invoke
       Rake::Task["db:migrate"].invoke
+      ActiveRecord::Base.connection.schema_cache.clear!
+      ActiveRecord::Base.descendants.each(&:reset_column_information)
     end
     Rake::Task["db:fixtures:load"].invoke
     Rake::Task["db:seed"].invoke
