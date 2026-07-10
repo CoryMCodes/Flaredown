@@ -40,6 +40,8 @@ Set up the database:
 docker compose --profile tools run --rm app-setup
 ```
 
+This command is interactive and resets the local Docker development and test databases. Type `yes` when prompted to continue.
+
 Start the application:
 
 ```bash

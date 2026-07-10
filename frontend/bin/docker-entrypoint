@@ -3,8 +3,26 @@ set -e
 
 cd /app
 
-if [ ! -x ./node_modules/.bin/ember ]; then
+dependencies_checksum() {
+  {
+    for file in package.json package-lock.json bower.json .bowerrc .npmrc; do
+      [ -f "$file" ] && sha256sum "$file"
+    done
+
+    find patches -type f -print 2>/dev/null | sort | while IFS= read -r file; do
+      sha256sum "$file"
+    done
+  } | sha256sum | awk '{print $1}'
+}
+
+checksum_file="./node_modules/.docker-dependencies-checksum"
+current_checksum="$(dependencies_checksum)"
+
+if [ ! -x ./node_modules/.bin/ember ] ||
+  [ ! -f "$checksum_file" ] ||
+  [ "$(cat "$checksum_file")" != "$current_checksum" ]; then
   npm install --unsafe-perm
+  printf '%s\n' "$current_checksum" > "$checksum_file"
 fi
 
 exec "$@"

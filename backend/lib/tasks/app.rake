@@ -64,7 +64,10 @@ namespace :app do
   def prompt(message, choices = nil)
     begin
       print(message)
-      answer = STDIN.gets.chomp
+      input = STDIN.gets
+      raise OperationAbortedException if input.nil?
+
+      answer = input.chomp
       p "got answer: #{answer}"
     end while choices.present? && !choices.include?(answer)
     answer
