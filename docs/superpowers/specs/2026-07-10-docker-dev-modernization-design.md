@@ -2,7 +2,7 @@
 
 ## Goal
 
-New developers should be able to clone Flaredown and run the entire application in Docker on modern Mac hardware, including both Intel and Apple Silicon machines. The default Docker development path should support frontend hot reload from the host checkout.
+New developers should be able to clone Flaredown and run the entire application in Docker on modern Mac hardware, including both Intel and Apple Silicon machines. The Docker development path should support frontend hot reload from the host checkout and should be documented as one supported way to run the app, not necessarily the default or preferred way.
 
 ## Current Behavior
 
@@ -31,13 +31,13 @@ Modernize the Docker development path without doing a broad Ember or Node migrat
 4. Keep the frontend source bind-mounted for hot reload.
 5. Preserve container-installed frontend dependencies with named volumes for `/app/node_modules` and `/app/bower_components`.
 6. Align Docker and CI with the npm version declared by the frontend package metadata.
-7. Update documentation so first-time setup is clear and Docker-first.
+7. Update documentation so Docker setup is clear without presenting it as the only or default setup path.
 
 This keeps the change focused on developer onboarding while replacing the obsolete browser dependency that blocks multi-architecture Docker.
 
 ## Docker Shape
 
-The default `dev` profile should run:
+The Docker `dev` profile should run:
 
 - `backend`: Rails API on `localhost:3000`, with `./backend:/app`.
 - `workers`: Sidekiq, with `./backend:/app`.
@@ -63,7 +63,7 @@ The test runner should not depend on host-installed browsers when run in Docker.
 
 ## Documentation
 
-The root README should present Docker as the default setup path:
+The root README should present Docker as one supported setup path:
 
 ```sh
 cp backend/env-example backend/.env
@@ -74,6 +74,8 @@ docker compose --profile dev up --build
 It should state that the app is available at `http://localhost:4300`, the backend at `http://localhost:3000`, and frontend edits should hot reload.
 
 The frontend README should stop listing PhantomJS as a prerequisite.
+
+All other README content should remain unchanged unless it is directly invalidated by the implementation. In particular, the native setup section should keep its current structure. If the Docker/frontend modernization removes the need for the current Apple Silicon native workaround, remove only the obsolete M1-specific instructions from the native Mac prerequisites section.
 
 ## Verification
 
