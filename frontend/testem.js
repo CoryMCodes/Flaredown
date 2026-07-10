@@ -1,4 +1,6 @@
 /*jshint node:true*/
+const chromePath = process.env.CHROME_BIN || 'google-chrome';
+
 module.exports = {
   "framework": "qunit",
   "test_page": "tests/index.html?hidepassed",
@@ -9,6 +11,9 @@ module.exports = {
   "launch_in_dev": [
     "Chrome"
   ],
+  "browser_paths": {
+    "Chrome": chromePath
+  },
   "browser_args": {
     "Chrome": [
       "--headless",
