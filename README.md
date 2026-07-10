@@ -18,10 +18,10 @@ Help would be appreciated! Please join us in [slack #flaredown](https://join.sla
 
 ## Installation
 
-The application and all dependencies are dockerized and can be run using `docker compose`, so there's no dependencies to install other than Docker.
+You can run the application and its dependencies using `docker compose`, or run the app natively using the setup instructions below.
 Alternatively, you can run the app using the `make` commands available: `make help`
 
-If you want to run the application on your own machine see the next sections on dependency installations
+If you want to run the application on your own machine see the next sections on dependency installations.
 
 ### Running natively
 
