@@ -4,12 +4,20 @@ module.exports = {
   "test_page": "tests/index.html?hidepassed",
   "disable_watching": true,
   "launch_in_ci": [
-    "PhantomJS"
-  ],
-  "launch_in_dev": [
-    "PhantomJS",
     "Chrome"
   ],
+  "launch_in_dev": [
+    "Chrome"
+  ],
+  "browser_args": {
+    "Chrome": [
+      "--headless",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--no-sandbox",
+      "--remote-debugging-port=0"
+    ]
+  },
   "proxies": {
     "/api": {
       "target": "http://localhost:3000"

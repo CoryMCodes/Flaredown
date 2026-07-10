@@ -35,6 +35,8 @@ jobs:
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 7
+    env:
+      CHROME_BIN: google-chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,7 +44,7 @@ jobs:
           node-version: 14
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm install -g npm@7.0.0
+      - run: npm install -g npm@6.14.18
       - run: npm install
         working-directory: ./frontend
       - run: npm run test
@@ -56,12 +58,14 @@ jobs:
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 7
+    env:
+      CHROME_BIN: google-chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-      - run: npm install -g npm@7.0.0
+      - run: npm install -g npm@6.14.18
       - run: npm install
         working-directory: ./frontend
       - run: npm run test
