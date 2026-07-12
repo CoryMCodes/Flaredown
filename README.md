@@ -111,7 +111,7 @@ npm install
 - Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp frontend/env-example frontend/.env`
 - Create a [Facebook dev app](https://developers.facebook.com/docs/development/create-an-app) and paste your own ID into `frontend/.env` file's `FACEBOOK_APP_ID` parameter.
     - Note: This is not necessary in `backend/.env` but we have not yet cleaned up these two files into the necessary components.
-- Seed your database using `make seed` or `bundle exec rails app:setup`
+- Reset, migrate, load fixtures, and seed your database using `make seed` or `bundle exec rails app:setup`
 
 ### Running
 
