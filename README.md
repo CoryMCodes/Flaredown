@@ -29,8 +29,10 @@ Populate the necessary environment parameters:
 
 ```bash
 cp backend/env-example backend/.env
-cp backend/env-example frontend/.env
+cp frontend/env-example frontend/.env
 ```
+
+In `frontend/.env`, `PORT` is the backend API port used by the Ember app and `FRONTEND_PORT` is the local frontend port.
 
 Set `FACEBOOK_APP_ID` in `frontend/.env` if you want to use Facebook login locally.
 
@@ -50,7 +52,7 @@ docker compose --profile dev up
 
 Visit your app at [http://localhost:4300](http://localhost:4300).
 
-If Docker dependencies get into a bad state, run `docker compose down -v` for a clean rebuild. This removes local Docker database and dependency volumes, so run the database setup command again afterward.
+Frontend dependency changes are handled automatically by Docker. For a full reset of all local Docker data, including databases and dependency volumes, run `docker compose down -v`, then run the database setup command again afterward.
 
 ### Running natively
 
@@ -106,7 +108,7 @@ npm install
 
 ### Prerequisites
 
-- Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp backend/env-example frontend/.env`
+- Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp frontend/env-example frontend/.env`
 - Create a [Facebook dev app](https://developers.facebook.com/docs/development/create-an-app) and paste your own ID into `frontend/.env` file's `FACEBOOK_APP_ID` parameter.
     - Note: This is not necessary in `backend/.env` but we have not yet cleaned up these two files into the necessary components.
 - Seed your database using `make seed` or `bundle exec rails app:setup`
