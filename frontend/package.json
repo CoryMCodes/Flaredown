@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": "",
   "scripts": {
-    "postinstall": "patch-package && ./node_modules/bower/bin/bower --allow-root install",
+    "postinstall": "patch-package && ./node_modules/bower/bin/bower install",
     "build": "ember build --environment=production",
     "lint:js": "eslint ./*.js app config lib server tests",
     "start": "serve dist -l ${PORT:-4300} -s",

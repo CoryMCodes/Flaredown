@@ -21,7 +21,7 @@ current_checksum="$(dependencies_checksum)"
 if [ ! -x ./node_modules/.bin/ember ] ||
   [ ! -f "$checksum_file" ] ||
   [ "$(cat "$checksum_file")" != "$current_checksum" ]; then
-  npm install --unsafe-perm
+  npm install
   printf '%s\n' "$current_checksum" > "$checksum_file"
 fi
 
