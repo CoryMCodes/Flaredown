@@ -50,6 +50,8 @@ docker compose --profile dev up
 
 Visit your app at [http://localhost:4300](http://localhost:4300).
 
+If Docker dependencies get into a bad state, run `docker compose down -v` for a clean rebuild. This removes local Docker database and dependency volumes, so run the database setup command again afterward.
+
 ### Running natively
 
 #### Mac Prerequisites
