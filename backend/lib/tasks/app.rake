@@ -43,6 +43,8 @@ namespace :app do
       Rake::Task["db:drop"].invoke
       Rake::Task["db:create"].invoke
       Rake::Task["db:migrate"].invoke
+      ActiveRecord::Base.connection.schema_cache.clear!
+      ActiveRecord::Base.descendants.each(&:reset_column_information)
     end
     Rake::Task["db:fixtures:load"].invoke
     Rake::Task["db:seed"].invoke
@@ -62,7 +64,10 @@ namespace :app do
   def prompt(message, choices = nil)
     begin
       print(message)
-      answer = STDIN.gets.chomp
+      input = STDIN.gets
+      raise OperationAbortedException if input.nil?
+
+      answer = input.chomp
       p "got answer: #{answer}"
     end while choices.present? && !choices.include?(answer)
     answer

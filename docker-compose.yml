@@ -13,7 +13,7 @@ services:
       - mongodb
       - redis
     ports:
-      - 3000:3000
+      - 127.0.0.1:3000:3000
     volumes:
       - ./backend:/app
     environment: *backend-services-hosts
@@ -34,16 +34,19 @@ services:
       - dev
       - native
   frontend:
-    platform: linux/amd64
     build: frontend
     depends_on:
       - backend
     ports:
-      - 4300:4300
-      - 65535:65535
+      - 127.0.0.1:4300:4300
+      - 127.0.0.1:4301:4301
     volumes:
       - ./frontend:/app
-    command: sh -c "cd /app && rm -rfd ./dist && ./node_modules/.bin/ember serve --port 4300 --proxy http://backend:3000 --live-reload-host frontend --live-reload-port 65535"
+      - frontend_node_modules:/app/node_modules
+      - frontend_bower_components:/app/bower_components
+    environment:
+      CHROME_BIN: /usr/bin/chromium
+    command: sh -c "cd /app && rm -rfd ./dist && ./node_modules/.bin/ember serve --watcher polling --host 0.0.0.0 --port 4300 --proxy http://backend:3000 --live-reload-host localhost --live-reload-port 4301"
     profiles:
       - dev
   native:
@@ -104,3 +107,5 @@ volumes:
   mongodb:
   redis:
   notused:
+  frontend_node_modules:
+  frontend_bower_components:

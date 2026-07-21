@@ -1,0 +1,16 @@
+# Backend API port used by frontend/config/environment.js in development.
+PORT=3000
+
+# Frontend dev/static server port.
+FRONTEND_PORT=4300
+
+FACEBOOK_APP_ID=
+PUSHER_KEY=
+RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+FULLSTORY_ENABLED=
+FULLSTORY_ORG=
+HEAP_KEY=
+
+# Production-only host overrides.
+API_HOST=
+STATIC_URL=

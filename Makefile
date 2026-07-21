@@ -19,8 +19,8 @@ specs: ## Run the specs
 console: ## Open a rails console
 	docker compose --profile dev run --rm backend rails c
 
-seed: ## Seed your database
-	docker compose --profile dev run --rm backend bundle exec rails app:setup
+seed: ## Reset, migrate, load fixtures, and seed your database
+	docker compose --profile tools run --rm app-setup
 
 help:
 	@sed -n -E "s/(^[^ ]+):.* ## (.*)/`printf "\033[32m"`\1|`printf "\033[0m"` \2/p" $(MAKEFILE_LIST) | sort | column -t -s '|'

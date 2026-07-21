@@ -18,10 +18,41 @@ Help would be appreciated! Please join us in [slack #flaredown](https://join.sla
 
 ## Installation
 
-The application and all dependencies are dockerized and can be run using `docker compose`, so there's no dependencies to install other than Docker.
+You can run the application and its dependencies using `docker compose`, or run the app natively using the setup instructions below.
 Alternatively, you can run the app using the `make` commands available: `make help`
 
-If you want to run the application on your own machine see the next sections on dependency installations
+If you want to run the application on your own machine see the next sections on dependency installations.
+
+### Running with Docker
+
+Populate the necessary environment parameters:
+
+```bash
+cp backend/env-example backend/.env
+cp frontend/env-example frontend/.env
+```
+
+In `frontend/.env`, `PORT` is the backend API port used by the Ember app and `FRONTEND_PORT` is the local frontend port.
+
+Set `FACEBOOK_APP_ID` in `frontend/.env` if you want to use Facebook login locally.
+
+Set up the database:
+
+```bash
+docker compose --profile tools run --rm app-setup
+```
+
+This command is interactive and resets the local Docker development and test databases. Type `yes` when prompted to continue.
+
+Start the application:
+
+```bash
+docker compose --profile dev up
+```
+
+Visit your app at [http://localhost:4300](http://localhost:4300).
+
+Frontend dependency changes are handled automatically by Docker. For a full reset of all local Docker data, including databases and dependency volumes, run `docker compose down -v`, then run the database setup command again afterward.
 
 ### Running natively
 
@@ -77,10 +108,10 @@ npm install
 
 ### Prerequisites
 
-- Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp backend/env-example frontend/.env`
+- Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp frontend/env-example frontend/.env`
 - Create a [Facebook dev app](https://developers.facebook.com/docs/development/create-an-app) and paste your own ID into `frontend/.env` file's `FACEBOOK_APP_ID` parameter.
     - Note: This is not necessary in `backend/.env` but we have not yet cleaned up these two files into the necessary components.
-- Seed your database using `make seed` or `bundle exec rails app:setup`
+- Reset, migrate, load fixtures, and seed your database using `make seed` or `bundle exec rails app:setup`
 
 ### Running
 

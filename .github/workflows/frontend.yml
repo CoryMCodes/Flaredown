@@ -42,11 +42,15 @@ jobs:
           node-version: 14
           cache: npm
           cache-dependency-path: frontend/package-lock.json
-      - run: npm install -g npm@7.0.0
+      - uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
+      - run: npm install -g npm@6.14.18
       - run: npm install
         working-directory: ./frontend
       - run: npm run test
         working-directory: ./frontend
+        env:
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
 
   node-next-test:
     strategy:
@@ -61,8 +65,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-      - run: npm install -g npm@7.0.0
+      - uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
       - run: npm install
         working-directory: ./frontend
       - run: npm run test
         working-directory: ./frontend
+        env:
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
