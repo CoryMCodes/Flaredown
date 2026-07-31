@@ -39,13 +39,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version-file: frontend/.nvmrc
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - uses: browser-actions/setup-chrome@v2
         id: setup-chrome
-      - run: npm install -g npm@6.14.18
-      - run: npm install
+      - run: npm ci
         working-directory: ./frontend
       - run: npm run test
         working-directory: ./frontend
@@ -53,9 +52,11 @@ jobs:
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
 
   node-next-test:
+    # Guards the `engines: node >= 18` range in frontend/package.json. The
+    # version in frontend/.nvmrc is covered by test-app above.
     strategy:
       matrix:
-        node_version: ['16', '18', '20']
+        node_version: ['18', '20', '24']
     needs: changes
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
@@ -65,9 +66,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - uses: browser-actions/setup-chrome@v2
         id: setup-chrome
-      - run: npm install
+      - run: npm ci
         working-directory: ./frontend
       - run: npm run test
         working-directory: ./frontend
