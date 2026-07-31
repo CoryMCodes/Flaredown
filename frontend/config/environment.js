@@ -1,5 +1,14 @@
 'use strict';
 
+var path = require('path');
+
+// Load frontend/.env before the config below reads process.env. This has to
+// happen here rather than through an addon: ember-cli evaluates this file
+// before addon config hooks run, so on a cold build process.env would still be
+// empty and FACEBOOK_APP_ID, PUSHER_KEY and RECAPTCHA_SITE_KEY would silently
+// drop out of the built config.
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
 module.exports = function(environment) {
   var ENV = {
     rootURL: '/',
@@ -57,14 +66,16 @@ module.exports = function(environment) {
     }
   };
 
+  var STATIC_URL;
+
   if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
     // ENV.APP.LOG_ACTIVE_GENERATION = true;
     // ENV.APP.LOG_TRANSITIONS = true;
     // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
-    ENV.apiHost    = 'http://localhost:' + (process.env.PORT || '3000');
-    var STATIC_URL = 'http://localhost:' + (process.env.FRONTEND_PORT || '4300');
+    ENV.apiHost = 'http://localhost:' + (process.env.PORT || '3000');
+    STATIC_URL = 'http://localhost:' + (process.env.FRONTEND_PORT || '4300');
   }
 
   if (environment === 'test') {
@@ -78,7 +89,7 @@ module.exports = function(environment) {
     ENV.APP.rootElement = '#ember-testing';
     ENV.APP.autoboot = false;
     ENV.apiHost = 'http://localhost:3000';
-    var STATIC_URL = 'http://localhost:4300';
+    STATIC_URL = 'http://localhost:4300';
   }
 
   if (environment === 'production') {
@@ -87,7 +98,7 @@ module.exports = function(environment) {
     };
 
     ENV.apiHost = process.env.API_HOST;
-    var STATIC_URL = process.env.STATIC_URL;
+    STATIC_URL = process.env.STATIC_URL;
   }
 
   ENV.staticUrl = STATIC_URL;

@@ -14,7 +14,7 @@ Help would be appreciated! Please join us in [slack #flaredown](https://join.sla
 * MongoDB 4.4.9
 * Redis 6.2.3
 * Ruby 3.2.3
-* Node 12.22.6
+* Node 22 (the frontend supports Node 18 and newer; `frontend/.nvmrc` pins the version CI builds against)
 
 ## Installation
 
@@ -92,10 +92,28 @@ gem install foreman
 
 #### Frontend
 
+The Ember app needs Node 18 or newer. `frontend/.nvmrc` and `frontend/.tool-versions` pin the
+version CI builds against, so if you use [nvm](https://github.com/nvm-sh/nvm) or
+[asdf-vm](https://asdf-vm.com/) you can let them pick it for you.
+
 ```bash
 cd frontend
+nvm install              # or: asdf install — optional, any Node >= 18 works
+cp env-example .env      # FACEBOOK_APP_ID is only needed for Facebook login
 npm install
+npm run dev
 ```
+
+Visit [http://localhost:4300](http://localhost:4300). `npm run dev` serves the app on its own; API
+calls are proxied to the backend on port 3000, so start the backend too if you need data.
+
+`npm install` also applies our patches and installs the remaining Bower packages via the
+`postinstall` script — no extra commands, and no `sudo`/`--unsafe-perm`, including in containers
+that run as root.
+
+If `npm install` stops with `EBADENGINE ... Required: {"node":">=18"}`, you are on an older Node.
+That check is deliberate (`engine-strict=true` in `frontend/.npmrc`) — switch versions rather than
+bypassing it, since the build does not work on Node 16 or older.
 
 #### React Native
 
@@ -109,8 +127,9 @@ npm install
 ### Prerequisites
 
 - Populate the necessary environment parameters with `cp backend/env-example backend/.env && cp frontend/env-example frontend/.env`
+    - The two files are read independently: the Rails app reads `backend/.env`, and the Ember build reads `frontend/.env`.
 - Create a [Facebook dev app](https://developers.facebook.com/docs/development/create-an-app) and paste your own ID into `frontend/.env` file's `FACEBOOK_APP_ID` parameter.
-    - Note: This is not necessary in `backend/.env` but we have not yet cleaned up these two files into the necessary components.
+    - Only needed for Facebook login; the rest of the app runs without it.
 - Reset, migrate, load fixtures, and seed your database using `make seed` or `bundle exec rails app:setup`
 
 ### Running
@@ -149,7 +168,13 @@ Addons are used for Heroku Postgres, Heroku Redis, Heroku Scheduler + Papertrail
 ### 🎨 [Figma Assets](https://www.figma.com/proto/MBVn73pD6JbBkxd65KSZHr/Flaredown-Guide?page-id=0%3A1&node-id=1%3A3&viewport=241%2C48%2C0.45&scaling=contain&starting-point-node-id=1%3A3)
 
 ## Common Problems
-* On first load, the app displays a blank beige screen instead of the login screen. Temporary fix is to add  `console.log(process.env.FACEBOOK_APP_ID)` right inside of the module.exports at the top of the `frontend/config/environment.js` file. You can then refresh the page (no need to kill Docker) and this should fix it. You can now remove the log.
+* The app used to display a blank beige screen instead of the login screen on first load, fixed by
+  editing `frontend/config/environment.js` and refreshing. The underlying bug was that the `.env`
+  file was loaded by an addon that runs *after* `config/environment.js` is evaluated, so a cold
+  build produced a config with no `FACEBOOK_APP_ID`, `PUSHER_KEY` or `RECAPTCHA_SITE_KEY`; editing
+  any file triggered a rebuild, which then saw them. `config/environment.js` now loads `.env`
+  itself, so a first build gets the same config as a rebuild. If you still hit a blank screen,
+  check that `frontend/.env` exists (`cp frontend/env-example frontend/.env`).
 
 ## License
 Copyright 2015-2024 Logan Merriam and contributors.
