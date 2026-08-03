@@ -168,13 +168,7 @@ Addons are used for Heroku Postgres, Heroku Redis, Heroku Scheduler + Papertrail
 ### 🎨 [Figma Assets](https://www.figma.com/proto/MBVn73pD6JbBkxd65KSZHr/Flaredown-Guide?page-id=0%3A1&node-id=1%3A3&viewport=241%2C48%2C0.45&scaling=contain&starting-point-node-id=1%3A3)
 
 ## Common Problems
-* The app used to display a blank beige screen instead of the login screen on first load, fixed by
-  editing `frontend/config/environment.js` and refreshing. The underlying bug was that the `.env`
-  file was loaded by an addon that runs *after* `config/environment.js` is evaluated, so a cold
-  build produced a config with no `FACEBOOK_APP_ID`, `PUSHER_KEY` or `RECAPTCHA_SITE_KEY`; editing
-  any file triggered a rebuild, which then saw them. `config/environment.js` now loads `.env`
-  itself, so a first build gets the same config as a rebuild. If you still hit a blank screen,
-  check that `frontend/.env` exists (`cp frontend/env-example frontend/.env`).
+*  If you still hit a blank screen on first load, check that `frontend/.env` exists (`cp frontend/env-example frontend/.env`).
 
 ## License
 Copyright 2015-2024 Logan Merriam and contributors.
