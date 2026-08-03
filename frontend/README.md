@@ -23,8 +23,7 @@ npm install
 ```
 
 `npm install` runs a `postinstall` script that applies our patches (`patch-package`) and installs
-the remaining Bower packages. That works as an unprivileged user and as root, so no `sudo` and no
-`--unsafe-perm` are needed.
+the remaining Bower packages.
 
 Prefer `npm ci` when you want an install that exactly matches `package-lock.json`, such as in CI or
 a fresh container.
