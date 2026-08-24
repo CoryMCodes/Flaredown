@@ -24,7 +24,9 @@ export default Component.extend(TrackablesFromType, {
 
   setupTracking() {
     this.get('tracking').setup({
-      at: new Date(this.get('checkin.date')),
+      // The API sends a bare calendar date. Wrapping it in a Date would anchor it
+      // to UTC midnight, which lands on the previous day west of UTC.
+      at: this.get('checkin.date'),
       trackableType: this.get('trackableType').capitalize()
     });
   },

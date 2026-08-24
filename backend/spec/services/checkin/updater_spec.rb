@@ -44,6 +44,61 @@ RSpec.describe Checkin::Updater do
     end
   end
 
+  context "when the calendar day has already rolled over in UTC" do
+    # 2016-01-06 19:30 in America/Los_Angeles is 2016-01-07 03:30 UTC, so the
+    # check-in's calendar date (the 6th) no longer matches Date.current (the 7th).
+    # The user is still filling in today's check-in, so their dose and ordering
+    # have to be remembered for the next one.
+    let(:utc_now) { Time.utc(2016, 1, 7, 3, 30, 0) }
+    let(:checkin) { create(:checkin, user_id: user.id, date: DateTime.new(2016, 1, 6, 3, 30, 0)) }
+    let(:treatment) { create(:treatment) }
+    let!(:checkin_treatment) { create(:checkin_treatment, checkin: checkin, treatment_id: treatment.id) }
+
+    let(:params) do
+      ActionController::Parameters.new(
+        id: checkin.id.to_s,
+        checkin: {
+          treatments_attributes: [{
+            id: checkin_treatment.id.to_s,
+            treatment_id: treatment.id,
+            value: "20 mg",
+            is_taken: "true",
+            position: 3
+          }]
+        }
+      )
+    end
+
+    it "remembers the dose for the next check-in" do
+      travel_to(utc_now) { subject }
+
+      expect(user.profile.reload.most_recent_dose_for(treatment.id)).to eq "20 mg"
+    end
+
+    it "remembers the position for the next check-in" do
+      travel_to(utc_now) { subject }
+
+      expect(user.profile.reload.most_recent_trackable_position_for(treatment)).to eq 3
+    end
+
+    context "and an older check-in is edited" do
+      let!(:latest_checkin) { create(:checkin, user_id: user.id, date: DateTime.new(2016, 1, 7, 3, 30, 0)) }
+      let(:checkin) { create(:checkin, user_id: user.id, date: DateTime.new(2016, 1, 5, 3, 30, 0)) }
+
+      it "leaves the remembered dose alone" do
+        travel_to(utc_now) { subject }
+
+        expect(user.profile.reload.most_recent_dose_for(treatment.id)).to be_nil
+      end
+
+      it "leaves the remembered position alone" do
+        travel_to(utc_now) { subject }
+
+        expect(user.profile.reload.most_recent_trackable_position_for(treatment)).to be_nil
+      end
+    end
+  end
+
   context "trackable usages" do
     context "when removing a trackable" do
       let!(:checkin_condition) { create(:checkin_condition, checkin: checkin) }
@@ -190,7 +245,11 @@ RSpec.describe Checkin::Updater do
         end
       end
       context "on a past checkin" do
+        # "Past" has to mean "a more recent check-in exists", not "dated before the
+        # server's UTC today": those are the same thing to the server, and the second
+        # reading also matches today's check-in filled in during the evening.
         let(:checkin) { create(:checkin, user_id: user.id, date: Time.zone.today - 1.day) }
+        let!(:later_checkin) { create(:checkin, user_id: user.id, date: Time.zone.today) }
 
         it "updates trackables positions in checkin but doesn't save them in profile" do
           params[:checkin][:conditions_attributes].each do |condition_attr|

@@ -27,6 +27,13 @@ module Api
         object.weather if show_single_relation?(:weathersMeasures)
       end
 
+      # Clients re-read this in the browser's local timezone, so it has to be a bare
+      # calendar date. An ISO timestamp reads back as the previous day for everyone
+      # west of UTC, and the next day for everyone east of it.
+      def date
+        object.calendar_date&.to_s
+      end
+
       def location_name
         object.position&.location_name
       end

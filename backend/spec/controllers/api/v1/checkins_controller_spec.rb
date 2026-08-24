@@ -18,7 +18,7 @@ RSpec.describe Api::V1::CheckinsController do
       it "returns correct checkin" do
         get :index, params: {date: date}
         expect(response_body[:checkins].count).to eq 2
-        expect(response_body[:checkins].pluck(:date).map(&:to_s).sort).to eq ["2016-01-06T00:00:00.000+00:00", "2016-01-06T01:00:00.000+00:00"]
+        expect(response_body[:checkins].pluck(:date)).to eq [date, date]
         returned_checkin = response_body[:checkins][0]
         expect(Date.parse(returned_checkin[:date])).to eq Date.parse(date)
       end
@@ -35,22 +35,53 @@ RSpec.describe Api::V1::CheckinsController do
     it "returns new checkin" do
       travel_to(DateTime.new(2020, 1, 2, 3, 4, 5)) do
         post :create, params: {checkin: {date: date}}
-        returned_checkin_1 = response_body[:checkin]
-        expect(DateTime.parse(returned_checkin_1[:date]).to_s).to eq "2016-01-06T03:04:05+00:00"
+        expect(response_body[:checkin][:date]).to eq date
       end
 
       travel_to(DateTime.new(2020, 1, 2, 3, 4, 6)) do
         post :create, params: {checkin: {date: date}}
-        returned_checkin_2 = response_body[:checkin]
-        expect(DateTime.parse(returned_checkin_2[:date]).to_s).to eq "2016-01-06T03:04:05+00:00"
       end
 
       travel_to(DateTime.new(2020, 1, 2, 3, 4, 7)) do
         post :create, params: {checkin: {date: date}}
-        returned_checkin_3 = response_body[:checkin]
-        expect(DateTime.parse(returned_checkin_3[:date]).to_s).to eq "2016-01-06T03:04:05+00:00"
       end
+
+      # Each POST is a separate check-in for the same day, ordered within it by the
+      # clock time #date carries alongside the user's calendar date.
+      expect(user.checkins.count).to eq 3
       expect(user.last_checkin.date).to eq(DateTime.new(2016, 1, 6, 3, 4, 7))
+    end
+  end
+
+  describe "calendar dates" do
+    # A user in America/Los_Angeles checking in at 19:30 on 2016-01-06 reaches the
+    # server at 2016-01-07 03:30 UTC. The API has to keep reporting 2016-01-06:
+    # clients re-read this value in the browser's local timezone, so an ISO
+    # timestamp reads back as the previous day for everyone west of UTC.
+    let(:utc_now) { Time.utc(2016, 1, 7, 3, 30, 0) }
+
+    it "reports the user's calendar date when creating" do
+      travel_to(utc_now) do
+        post :create, params: {checkin: {date: date}}
+
+        expect(response_body[:checkin][:date]).to eq date
+      end
+    end
+
+    it "reports the user's calendar date when showing" do
+      travel_to(utc_now) { post :create, params: {checkin: {date: date}} }
+
+      get :show, params: {id: user.last_checkin.id}
+
+      expect(response_body[:checkin][:date]).to eq date
+    end
+
+    it "reports the user's calendar date when listing" do
+      travel_to(utc_now) { post :create, params: {checkin: {date: date}} }
+
+      get :index, params: {date: date}
+
+      expect(response_body[:checkins].pluck(:date)).to eq [date]
     end
   end
 

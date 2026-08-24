@@ -53,6 +53,13 @@ class Checkin
     @user ||= User.find(user_id)
   end
 
+  # The calendar date this check-in belongs to. #date stores the user's local date
+  # carrying the server's UTC clock time (see Api::V1::CheckinsController#create),
+  # so only the date component describes the day the user checked in for.
+  def calendar_date
+    date&.utc&.to_date
+  end
+
   def weather
     @weather ||= Weather.find_by(id: weather_id)
   end

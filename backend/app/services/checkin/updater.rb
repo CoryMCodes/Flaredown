@@ -27,7 +27,7 @@ class Checkin::Updater
   def update!
     checkin.update!(permitted_params.except(:postal_code))
 
-    if checkin.date.today?
+    if latest_checkin?
       save_most_recent_doses
       save_most_recent_trackables_positions
     end
@@ -44,6 +44,17 @@ class Checkin::Updater
   end
 
   private
+
+  # Doses and positions are carried over to the next check-in, so only the most
+  # recent one may update them: back-filling an older day must not clobber what the
+  # user is on now. Comparing the check-in against Date.current instead would tie
+  # this to the server's UTC day, which is a day ahead of the user's own calendar
+  # date every evening for anyone west of UTC.
+  def latest_checkin?
+    latest = current_user.last_checkin
+
+    latest.blank? || checkin.calendar_date >= latest.calendar_date
+  end
 
   def update_trackables_positions(params)
     %w[Condition Symptom Treatment].each do |trackable_class_name|
@@ -91,6 +102,7 @@ class Checkin::Updater
         )
       end
     end
+    current_user.profile.save!
   end
 
   def set_most_recent_doses(treatments_attrs)
