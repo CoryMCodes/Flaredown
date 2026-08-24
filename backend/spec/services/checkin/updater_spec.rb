@@ -230,6 +230,25 @@ RSpec.describe Checkin::Updater do
           expect(successor.position).to eq successor_attrs[:position] - 1
         end
       end
+
+      # The successor is shifted down into the removed trackable's slot, so keeping the
+      # removed one's position remembers that slot twice and re-adding it later seeds a
+      # tie that ordering and drag maths can't resolve.
+      it "forgets the removed trackable's position" do
+        removed_id = params[:checkin][:conditions_attributes].find { |a| a[:_destroy].eql?("1") }[:condition_id]
+
+        subject
+
+        removed = Condition.find(removed_id)
+        expect(user.profile.reload.most_recent_trackable_position_for(removed)).to be_nil
+      end
+
+      it "leaves no two trackables remembered on the same position" do
+        subject
+
+        positions = user.profile.reload.most_recent_conditions_positions.values
+        expect(positions).to eq positions.uniq
+      end
     end
 
     context "when reordering trackables" do

@@ -97,9 +97,16 @@ class Checkin::Updater
       next if trackables_attributes.blank?
       trackables_attributes.each do |trackable_attrs|
         trackable = trackable_class.find(trackable_attrs["#{trackable_type}_id".to_sym])
-        current_user.profile.set_most_recent_trackable_position(
-          trackable, trackable_attrs[:position]
-        )
+
+        # A removed trackable's successor has just been shifted into its slot, so
+        # remembering it too would leave two trackables tied on that position.
+        if trackable_attrs[:_destroy].eql?("1")
+          current_user.profile.unset_most_recent_trackable_position(trackable)
+        else
+          current_user.profile.set_most_recent_trackable_position(
+            trackable, trackable_attrs[:position]
+          )
+        end
       end
     end
     current_user.profile.save!

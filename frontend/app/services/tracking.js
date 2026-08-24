@@ -17,7 +17,7 @@ export default Ember.Service.extend({
     });
   }),
 
-  track: function(trackable, colorId, callback) {
+  track: function(trackable, colorId) {
     //save new tracking for trackable and then add it to cache
     //so that user can see it immediately without having to re-query the store
     var tracking = this.get('store').createRecord('tracking', {
@@ -31,22 +31,19 @@ export default Ember.Service.extend({
     return tracking.save().then(
       savedTracking => {
         this.get('newTrackings').pushObject(savedTracking);
-        this.runCallback(callback, savedTracking);
+
+        return savedTracking;
       },
       error => {
-        // The callback resolves the promise the check-in save waits on. Skipping it
-        // here would leave that promise pending and the check-in would never save.
+        // The check-in save waits on this. Swallowing the failure would let the
+        // check-in report success with nothing to carry the trackable forward, which
+        // is the disappearance this is meant to fix, so it travels with the promise.
         tracking.deleteRecord();
         Ember.Logger.error('Failed to save tracking', error);
-        this.runCallback(callback);
+
+        throw error;
       }
     );
-  },
-
-  runCallback: function(callback, arg) {
-    if (Ember.isPresent(callback)) {
-      callback(arg);
-    }
   },
 
   /* params can be either:
@@ -57,10 +54,9 @@ export default Ember.Service.extend({
          trackableType: 'Condition' | 'Symptom' | 'Treatment'
        }
   */
-  untrack: function(params, callback) {
+  untrack: function(params) {
     if (Ember.isPresent(params.tracking)) {
-      this.destroyTracking(params.tracking, callback);
-      return;
+      return this.destroyTracking(params.tracking);
     }
 
     this.set('trackableType', params.trackableType);
@@ -72,36 +68,25 @@ export default Ember.Service.extend({
     });
 
     if (Ember.isPresent(newTracking)) {
-      this.destroyTracking(newTracking, callback);
-      return;
+      return this.destroyTracking(newTracking);
     }
 
     // An older tracking is only ended from today's check-in - see untrackRemovedTracked.
     if (params.onlyNew) {
-      this.runCallback(callback);
-      return;
+      return Ember.RSVP.resolve();
     }
 
-    this.get('existingTrackings').then(
-      trackings => {
-        const tracking = trackings.find(record => {
-          return this.compare(record, params.trackable);
-        });
+    return this.get('existingTrackings').then(trackings => {
+      const tracking = trackings.find(record => {
+        return this.compare(record, params.trackable);
+      });
 
-        if (Ember.isPresent(tracking)) {
-          this.destroyTracking(tracking, callback);
-        } else {
-          // Nothing to untrack - a trackable stranded by an earlier bug has no
-          // tracking at all. Hand control back anyway, or the check-in save waits on
-          // a promise that never settles.
-          this.runCallback(callback);
-        }
-      },
-      error => {
-        Ember.Logger.error('Failed to load trackings', error);
-        this.runCallback(callback);
-      }
-    );
+      // Nothing to untrack is not a failure: a trackable stranded by an earlier bug
+      // has no tracking at all, and the check-in still has to save.
+      if (Ember.isNone(tracking)) { return; }
+
+      return this.destroyTracking(tracking);
+    });
   },
 
   compare: function(tracking, trackable) {
@@ -109,14 +94,21 @@ export default Ember.Service.extend({
            Ember.isEqual(tracking.get('trackableType').toLowerCase(), trackable.get('constructor.modelName'));
   },
 
-  destroyTracking: function(tracking, callback) {
+  destroyTracking: function(tracking) {
     // DELETE carries no body, so the check-in's date travels as a query param - see
     // adapters/tracking.js.
     return tracking.destroyRecord({ adapterOptions: { date: this.get('at') } }).then(
-      () => this.runCallback(callback),
+      () => {
+        // A destroyed record left in the cache is found ahead of the live one if the
+        // trackable is added again, so the next removal would miss.
+        this.get('newTrackings').removeObject(tracking);
+      },
       error => {
+        // Travels with the promise: the check-in must not report the trackable as
+        // removed while its tracking is still active - see track().
         Ember.Logger.error('Failed to destroy tracking', error);
-        this.runCallback(callback);
+
+        throw error;
       }
     );
   }

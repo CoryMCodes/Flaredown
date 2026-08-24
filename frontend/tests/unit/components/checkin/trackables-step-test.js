@@ -14,13 +14,15 @@ function trackingStub() {
     setup(options) {
       this.setProperties(options);
     },
-    track(trackable, colorId, callback) {
+    track(trackable) {
       this.get('tracked').push(trackable);
-      callback();
+
+      return Ember.RSVP.resolve();
     },
-    untrack(params, callback) {
+    untrack(params) {
       this.get('untracked').push(params);
-      callback();
+
+      return Ember.RSVP.resolve();
     }
   });
 }
@@ -96,6 +98,48 @@ test('it only undoes a just-started tracking for a treatment removed from a past
     assert.equal(tracking.get('untracked.0.onlyNew'), true);
     done();
   });
+});
+
+// saveCheckin waits on these before saving, so a failure has to reach it: otherwise
+// the check-in reports success with nothing to carry the treatment forward.
+test('it propagates a failure to start the tracking', function(assert) {
+  const done = assert.async();
+  const tracking = trackingStub();
+  const component = componentFor(this, moment().format('YYYY-MM-DD'), tracking);
+
+  tracking.set('track', () => Ember.RSVP.reject(new Error('boom')));
+  component.set('addedTracked', Ember.Object.create({ treatment: Ember.Object.create({ id: '1' }) }));
+
+  component.trackAddedTracked().then(
+    () => {
+      assert.ok(false, 'should not have resolved');
+      done();
+    },
+    error => {
+      assert.equal(error.message, 'boom');
+      done();
+    }
+  );
+});
+
+test('it propagates a failure to stop the tracking', function(assert) {
+  const done = assert.async();
+  const tracking = trackingStub();
+  const component = componentFor(this, moment().format('YYYY-MM-DD'), tracking);
+
+  tracking.set('untrack', () => Ember.RSVP.reject(new Error('boom')));
+  component.set('removedTracked', Ember.Object.create({ treatment: Ember.Object.create({ id: '1' }) }));
+
+  component.untrackRemovedTracked().then(
+    () => {
+      assert.ok(false, 'should not have resolved');
+      done();
+    },
+    error => {
+      assert.equal(error.message, 'boom');
+      done();
+    }
+  );
 });
 
 test('isTodaysCheckin is true for a check-in dated today', function(assert) {

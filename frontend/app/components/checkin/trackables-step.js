@@ -1,5 +1,4 @@
 import Ember from 'ember';
-import DS from 'ember-data';
 import moment from 'moment';
 import TrackablesFromType from 'flaredown/mixins/trackables-from-type';
 
@@ -207,83 +206,42 @@ export default Component.extend(TrackablesFromType, {
   },
 
   untrackRemovedTracked() {
-    // Off an earlier day only a tracking started on this screen is undone: removing a
-    // trackable from a past check-in corrects that day's record, it doesn't mean the
-    // user has stopped. From today's check-in it stops the tracking for good.
-    return new Ember.RSVP.Promise(resolve => {
-      let removedTracked = this.get('removedTracked');
-      if (Ember.isPresent(removedTracked)) {
-        let rawTrackable = removedTracked.get(this.get('trackableType'));
-        if (DS.PromiseObject.detectInstance(rawTrackable)) {
-          let trackablePromise = rawTrackable;
-          if (trackablePromise.get('isFulfilled')) {
-            this.untrack(trackablePromise.get('content'), resolve);
-          } else {
-            trackablePromise.then(trackable => {
-              this.untrack(trackable, resolve);
-            });
-          }
-        } else {
-          Ember.Logger.debug('rawTrackable is not a DS.PromiseObject');
-          if (Ember.isPresent(rawTrackable)) {
-            this.untrack(rawTrackable, resolve);
-          }
-        }
-      } else {
-        resolve();
-      }
-    });
-  },
+    const removedTracked = get(this, 'removedTracked');
 
-  untrack(trackable, resolve) {
-    this.get('tracking').untrack(
-      {
+    if (isNone(removedTracked)) { return Ember.RSVP.resolve(); }
+
+    return this.resolveTrackable(removedTracked).then(trackable => {
+      if (isNone(trackable)) { return; }
+
+      // Off an earlier day only a tracking started on this screen is undone: removing
+      // a trackable from a past check-in corrects that day's record, it doesn't mean
+      // the user has stopped. From today's check-in it stops the tracking for good.
+      return this.get('tracking').untrack({
         trackable: trackable,
-        trackableType: this.get('trackableType').capitalize(),
-        onlyNew: !this.get('isTodaysCheckin')
-      },
-      resolve
-    );
+        trackableType: get(this, 'trackableType').capitalize(),
+        onlyNew: !get(this, 'isTodaysCheckin')
+      });
+    });
   },
 
   trackAddedTracked() {
-    // Start tracking the trackable from this check-in's date on, so it carries over
-    // to later check-ins whichever day is being filled in.
-    return new Ember.RSVP.Promise(resolve => {
-      var addedTracked = this.get('addedTracked');
-      if (Ember.isPresent(addedTracked)) {
-        let rawTrackable = addedTracked.get(this.get('trackableType'));
-        if (DS.PromiseObject.detectInstance(rawTrackable)) {
-          let trackablePromise = rawTrackable;
-          if (trackablePromise.get('isFulfilled')) {
-            this.get('tracking').track(
-              trackablePromise.get('content'),
-              addedTracked.get('colorId'),
-              resolve
-            );
-          } else {
-            trackablePromise.then(trackable => {
-              this.get('tracking').track(
-                trackable,
-                addedTracked.get('colorId'),
-                resolve
-              );
-            });
-          }
-        } else {
-          Ember.Logger.debug('rawTrackable is not a DS.PromiseObject');
-          if (Ember.isPresent(rawTrackable)) {
-            this.get('tracking').track(
-              rawTrackable,
-              addedTracked.get('colorId'),
-              resolve
-            );
-          }
-        }
-      } else {
-        resolve();
-      }
+    const addedTracked = get(this, 'addedTracked');
+
+    if (isNone(addedTracked)) { return Ember.RSVP.resolve(); }
+
+    return this.resolveTrackable(addedTracked).then(trackable => {
+      if (isNone(trackable)) { return; }
+
+      // Start tracking from this check-in's date on, so the trackable carries over to
+      // later check-ins whichever day is being filled in.
+      return this.get('tracking').track(trackable, get(addedTracked, 'colorId'));
     });
+  },
+
+  // The trackable may still be an unresolved DS.PromiseObject; RSVP follows it to the
+  // record either way.
+  resolveTrackable(tracked) {
+    return Ember.RSVP.resolve(get(tracked, get(this, 'trackableType')));
   },
 
   deleteAddedTracked() {

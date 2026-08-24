@@ -128,12 +128,21 @@ class Profile < ActiveRecord::Base
     send("most_recent_#{trackable_type}_position_for", trackable)
   end
 
+  def unset_most_recent_trackable_position(trackable)
+    trackable_type = trackable.class.name.underscore
+    send("unset_most_recent_#{trackable_type}_position", trackable)
+  end
+
   %w[condition symptom treatment].each do |trackable_type|
     positions_attr = "most_recent_#{trackable_type.pluralize}_positions"
 
     define_method "set_most_recent_#{trackable_type}_position" do |trackable, position|
       send("#{positions_attr}=", {}) if send(positions_attr).nil?
       send(positions_attr)[trackable.id.to_s] = position.to_s
+    end
+
+    define_method "unset_most_recent_#{trackable_type}_position" do |trackable|
+      send(positions_attr)&.delete(trackable.id.to_s)
     end
 
     # A trackable with no remembered position reads as nil, not 0: callers fall back

@@ -25,9 +25,8 @@ export default Ember.Component.extend(TrackablesFromType, {
       this.track(selectedTrackable);
     },
     remove(tracking) {
-      this.get('tracking').untrack({
-        tracking: tracking
-      });
+      // The service logs the failure; there is no save waiting on it here.
+      this.get('tracking').untrack({ tracking: tracking }).catch(() => {});
     }
   },
 
@@ -38,9 +37,10 @@ export default Ember.Component.extend(TrackablesFromType, {
     });
 
     if (!trackableIds.includes(get(trackable, 'id'))) {
-      this.get('tracking').track(trackable, null, () => {
-        this.set('selectedTrackable', null);
-      });
+      this.get('tracking').track(trackable, null)
+        .then(() => this.set('selectedTrackable', null))
+        // The service logs the failure; there is no save waiting on it here.
+        .catch(() => {});
     }
   }
 
