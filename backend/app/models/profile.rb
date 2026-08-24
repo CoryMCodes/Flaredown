@@ -129,18 +129,20 @@ class Profile < ActiveRecord::Base
   end
 
   %w[condition symptom treatment].each do |trackable_type|
+    positions_attr = "most_recent_#{trackable_type.pluralize}_positions"
+
     define_method "set_most_recent_#{trackable_type}_position" do |trackable, position|
-      send(
-        "most_recent_#{trackable_type.pluralize}_positions"
-      )[trackable.id.to_s] = position.to_s
+      send("#{positions_attr}=", {}) if send(positions_attr).nil?
+      send(positions_attr)[trackable.id.to_s] = position.to_s
     end
 
+    # A trackable with no remembered position reads as nil, not 0: callers fall back
+    # to appending it to the end of the list, and 0 would pin it to the top on top of
+    # whatever is genuinely first.
     define_method "most_recent_#{trackable_type}_position_for" do |trackable|
-      trackables_positions = send("most_recent_#{trackable_type.pluralize}_positions")
+      trackables_positions = send(positions_attr) || {}
 
-      return nil if trackables_positions.blank?
-
-      trackables_positions[trackable.id.to_s].to_i
+      trackables_positions[trackable.id.to_s]&.to_i
     end
   end
 

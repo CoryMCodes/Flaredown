@@ -3,8 +3,9 @@ import DS from 'ember-data';
 export default DS.Model.extend({
 
   // Attributes
-  startAt: DS.attr('date'),
-  endAt: DS.attr('date'),
+  // Calendar dates, kept as strings so they don't get re-anchored to UTC midnight.
+  startAt: DS.attr('string'),
+  endAt: DS.attr('string'),
   trackableType: DS.attr('string'),
   colorId: DS.attr('string'),
 

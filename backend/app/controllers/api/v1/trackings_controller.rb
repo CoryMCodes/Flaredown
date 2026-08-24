@@ -12,7 +12,7 @@ module Api
       end
 
       def create
-        tracking = Tracking.new(create_params.merge(start_at: Time.zone.today, user: current_user))
+        tracking = Tracking.new(create_params.merge(start_at: at_date, user: current_user))
 
         authorize! :create, tracking
 
@@ -24,7 +24,7 @@ module Api
       end
 
       def destroy
-        TrackingDestroyer.new(current_user, @tracking, Time.zone.today).destroy
+        TrackingDestroyer.new(current_user, @tracking, at_date).destroy
         head :no_content
       end
 
@@ -32,6 +32,15 @@ module Api
 
       def at
         Time.zone.parse(params.require(:at))
+      end
+
+      # The date of the check-in the client is filling in. It is the user's own
+      # calendar date, which the server cannot derive: its UTC date is a day off for
+      # several hours daily, and an earlier day may be being filled in entirely.
+      def at_date
+        date = params[:date] || params.dig(:tracking, :start_at)
+
+        date.present? ? Date.parse(date) : Time.zone.today
       end
 
       def trackable_type

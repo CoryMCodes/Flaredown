@@ -44,6 +44,30 @@ RSpec.describe Profile do
       it { is_expected.to respond_to(:most_recent_treatment_position_for).with(1).argument }
     end
   end
+  describe "most recent trackable positions" do
+    let(:treatment) { create(:treatment) }
+    let(:other_treatment) { create(:treatment) }
+
+    it "returns the remembered position" do
+      subject.set_most_recent_treatment_position(treatment, 3)
+
+      expect(subject.most_recent_treatment_position_for(treatment)).to eq 3
+    end
+
+    it "returns nil when nothing has been remembered yet" do
+      expect(subject.most_recent_treatment_position_for(treatment)).to be_nil
+    end
+
+    # Callers fall back to appending when this is nil, so an unremembered trackable
+    # must not read as position 0 - that would pin it to the top of the list on top
+    # of whatever is genuinely first.
+    it "returns nil for a trackable that has no remembered position" do
+      subject.set_most_recent_treatment_position(other_treatment, 0)
+
+      expect(subject.most_recent_treatment_position_for(treatment)).to be_nil
+    end
+  end
+
   describe "ethnicities" do
     context "get" do
       before { subject.ethnicity_ids_string = "latino,white" }

@@ -32,7 +32,10 @@ export default Component.extend(TrackablesFromType, {
   },
 
   checkin: alias('model.checkin'),
-  isTodaysCheckin: computed('checkin', function() {
+
+  // checkin.date is a bare calendar date, so this compares calendar days in the
+  // browser's own timezone rather than re-reading a UTC instant.
+  isTodaysCheckin: computed('checkin.date', function() {
     return moment(this.get('checkin.date')).isSame(new Date(), 'day');
   }),
 
@@ -204,10 +207,12 @@ export default Component.extend(TrackablesFromType, {
   },
 
   untrackRemovedTracked() {
-    // untrack() removedTracked if isTodaysCheckin
+    // Off an earlier day only a tracking started on this screen is undone: removing a
+    // trackable from a past check-in corrects that day's record, it doesn't mean the
+    // user has stopped. From today's check-in it stops the tracking for good.
     return new Ember.RSVP.Promise(resolve => {
       let removedTracked = this.get('removedTracked');
-      if (this.get('isTodaysCheckin') && Ember.isPresent(removedTracked)) {
+      if (Ember.isPresent(removedTracked)) {
         let rawTrackable = removedTracked.get(this.get('trackableType'));
         if (DS.PromiseObject.detectInstance(rawTrackable)) {
           let trackablePromise = rawTrackable;
@@ -234,17 +239,19 @@ export default Component.extend(TrackablesFromType, {
     this.get('tracking').untrack(
       {
         trackable: trackable,
-        trackableType: this.get('trackableType').capitalize()
+        trackableType: this.get('trackableType').capitalize(),
+        onlyNew: !this.get('isTodaysCheckin')
       },
       resolve
     );
   },
 
   trackAddedTracked() {
-    // track() addedTracked if isTodaysCheckin
+    // Start tracking the trackable from this check-in's date on, so it carries over
+    // to later check-ins whichever day is being filled in.
     return new Ember.RSVP.Promise(resolve => {
       var addedTracked = this.get('addedTracked');
-      if (this.get('isTodaysCheckin') && Ember.isPresent(addedTracked)) {
+      if (Ember.isPresent(addedTracked)) {
         let rawTrackable = addedTracked.get(this.get('trackableType'));
         if (DS.PromiseObject.detectInstance(rawTrackable)) {
           let trackablePromise = rawTrackable;

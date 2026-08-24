@@ -42,6 +42,19 @@ RSpec.describe Checkin::Updater do
       saved_dose = user.profile.most_recent_dose_for(treatment.id)
       expect(returned_treatment.value).to eq saved_dose
     end
+
+    context "and the client sent a dose with the new treatment" do
+      let(:params) do
+        ActionController::Parameters.new(
+          id: checkin.id.to_s,
+          checkin: {treatments_attributes: [{treatment_id: treatment.id, value: "5 ml", is_taken: "true"}]}
+        )
+      end
+
+      it "keeps the dose the client sent" do
+        expect(subject.treatments[0].value).to eq "5 ml"
+      end
+    end
   end
 
   context "when the calendar day has already rolled over in UTC" do

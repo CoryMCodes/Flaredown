@@ -1,4 +1,5 @@
 import Ember from 'ember';
+import moment from 'moment';
 import TrackablesFromType from 'flaredown/mixins/trackables-from-type';
 
 const {
@@ -11,7 +12,7 @@ export default Ember.Component.extend(TrackablesFromType, {
 
   setupTracking: Ember.on('init', function() {
     this.get('tracking').setup({
-      at: new Date(),
+      at: moment().format('YYYY-MM-DD'),
       trackableType: this.get('trackableType').capitalize()
     });
   }),

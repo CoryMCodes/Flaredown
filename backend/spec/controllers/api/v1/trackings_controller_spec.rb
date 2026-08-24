@@ -58,6 +58,17 @@ RSpec.describe Api::V1::TrackingsController do
       start_at = Date.parse(response_body[:tracking][:start_at])
       expect(start_at.strftime("%F")).to eq Time.zone.today.strftime("%F")
     end
+
+    # The client tracks against the check-in it is filling in, whose calendar date is
+    # not the server's UTC date for several hours a day, and need not be today at all
+    # when an earlier day is being filled in.
+    context "when the client passes the check-in's date" do
+      it "starts the tracking on that date" do
+        post :create, params: {tracking: tracking_attributes.merge(start_at: "2016-01-06")}
+
+        expect(Date.parse(response_body[:tracking][:start_at])).to eq Date.new(2016, 1, 6)
+      end
+    end
   end
 
   describe "destroy" do
@@ -78,6 +89,24 @@ RSpec.describe Api::V1::TrackingsController do
         end
       end
     end
+    context "when the client passes the check-in's date" do
+      before { current_tracking.update!(start_at: Date.new(2016, 1, 1)) }
+
+      it "ends the tracking on that date rather than the server's today" do
+        delete :destroy, params: {id: current_tracking.id, date: "2016-01-06"}
+
+        expect(current_tracking.reload.end_at).to eq Date.new(2016, 1, 6)
+      end
+
+      it "destroys a tracking that started on that same date" do
+        current_tracking.update!(start_at: Date.new(2016, 1, 6))
+
+        delete :destroy, params: {id: current_tracking.id, date: "2016-01-06"}
+
+        expect(Tracking.find_by(id: current_tracking.id)).to be_nil
+      end
+    end
+
     context "when destroying another user's tracking" do
       it "returns 401 (Unauthorized)" do
         delete :destroy, params: {id: another_user_tracking.id}

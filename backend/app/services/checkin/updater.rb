@@ -109,6 +109,10 @@ class Checkin::Updater
     return if treatments_attrs.blank?
 
     added_trackables_attrs(treatments_attrs).each do |t|
+      # Only fill in a dose the client left blank - it may have sent one alongside the
+      # treatment it is adding.
+      next if t[:value].present?
+
       t[:value] = current_user.profile.most_recent_dose_for(t[:treatment_id])
     end
   end
