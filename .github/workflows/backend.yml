@@ -65,12 +65,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
+          working-directory: backend
           bundler-cache: true
 
       - name: ERB lint
         run: |
-          gem install erb_lint
-          erblint --lint-all --autocorrect
+          bundle exec erblint --lint-all
 
   rspec:
     needs: changes
@@ -138,6 +138,8 @@ jobs:
 
   brakeman:
     name: Security Analysis
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

@@ -535,7 +535,7 @@ DEPENDENCIES
   devise (~> 4.8)
   devise_invitable (~> 2.0)
   dotenv-rails
-  erb_lint
+  erb_lint (~> 0.5.0)
   factory_bot_rails
   ffaker
   foreman

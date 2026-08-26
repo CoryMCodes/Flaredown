@@ -72,7 +72,7 @@ group :development, :test do
   gem "byebug"
   gem "database_cleaner"
   gem "database_cleaner-mongoid"
-  gem "erb_lint", require: false
+  gem "erb_lint", "~> 0.5.0", require: false
   gem "factory_bot_rails"
   # Generate Fake data
   gem "ffaker"
