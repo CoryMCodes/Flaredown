@@ -11,7 +11,9 @@ gem "rake"
 gem "sprockets-rails"
 
 # JSON serializer
-gem "active_model_serializers", "~> 0.9"
+# Pinned exactly: `~> 0.9` also permits 0.10.x, which is a rewrite that drops the
+# `embed:`/`embed_in_root:` options this app relies on in every serializer.
+gem "active_model_serializers", "0.9.8"
 
 # Use postgresql and mongo as the database for Active Record
 gem "mongoid", "8.1.3" # https://www.mongodb.com/docs/mongoid/current/reference/compatibility/#rails-compatibility
