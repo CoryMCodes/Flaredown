@@ -4,6 +4,13 @@ SimpleCov.start
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 ENV["RAILS_ENV"] ||= "test"
 
+# Fixed values for the test suite, replacing what config/secrets.yml used to pin in
+# its `test:` section. Set before the environment is loaded so the initializers see
+# them, and set unconditionally so a developer's .env cannot change what the suite
+# asserts on.
+ENV["SMTP_EMAIL_FROM"] = "from@some.email"
+ENV["SECRET_KEY_BASE"] ||= "c72c35331a3c6ab7e521ee57c867bdb2a081150064e16f7e83f9455f135d1efe72db2d7a7cc43ff9d671de3ae2afd17fc9aee9d823a695940f7f3cbca8c67116"
+
 require File.expand_path("../../config/environment", __FILE__)
 require "rspec/rails"
 
