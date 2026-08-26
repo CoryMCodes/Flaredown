@@ -41,8 +41,10 @@ Rails.application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
-  # Print deprecation notices to the stderr.
-  config.active_support.deprecation = :stderr
+  # Fail on deprecation warnings rather than printing them. Deprecations are the
+  # advance notice of the next framework upgrade's breakage, and on stderr they
+  # scroll past unread.
+  config.active_support.deprecation = :raise
 
   # Raise exceptions for disallowed deprecations.
   config.active_support.disallowed_deprecation = :raise
