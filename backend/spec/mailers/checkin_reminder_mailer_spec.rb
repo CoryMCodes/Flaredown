@@ -1,6 +1,14 @@
 require "rails_helper"
 
 RSpec.describe CheckinReminderMailer, type: :mailer do
+  # ApplicationMailer captures the From address into default_params when the class is
+  # loaded, so stubbing the config it reads would be too late. Override the stored
+  # default instead, rather than depending on whatever SMTP_EMAIL_FROM happens to hold.
+  before do
+    allow(described_class).to receive(:default_params)
+      .and_return(described_class.default_params.merge(from: "from@some.email"))
+  end
+
   describe "checkin reminder email" do
     let(:user_email) { create(:user, email: "test@flaredown.com").email }
     let(:mail) { CheckinReminderMailer.remind(email: user_email) }
