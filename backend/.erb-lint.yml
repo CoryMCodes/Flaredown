@@ -1,0 +1,13 @@
+---
+# `erblint --lint-all` globs outward from the working directory. On CI,
+# ruby/setup-ruby with bundler-cache installs gems into vendor/bundle inside that
+# directory, so without these exclusions the run lints the ERB templates shipped
+# inside kaminari, railties and rubocop. Locally the gems live outside the repo,
+# which is why this only shows up on CI.
+#
+# Default linters stay enabled: RunnerConfig.default_for merges this file over the
+# defaults rather than replacing them.
+exclude:
+  - "vendor/**/*"
+  - "node_modules/**/*"
+  - "tmp/**/*"
