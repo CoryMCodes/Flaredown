@@ -13,12 +13,6 @@ module.exports = function(defaults) {
 
     'ember-cli-babel': {},
 
-    dotEnv: {
-      path: {
-        development: '../backend/.env',
-      }
-    },
-
     sassOptions: {
       includePaths: [
         'node_modules/bourbon/core',

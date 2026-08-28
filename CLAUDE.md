@@ -66,5 +66,6 @@ Heroku, via `rake` tasks in the root `Rakefile`. Frontend and backend are separa
 
 ## Gotchas
 
-- Node is pinned to **12.22.6** for the Ember frontend (`.tool-versions`); the native app uses a modern toolchain independently. Don't assume one Node version across the repo.
-- Env files: `cp backend/env-example backend/.env` and `cp backend/env-example frontend/.env`. A `FACEBOOK_APP_ID` is needed in `frontend/.env` or the app renders a blank beige screen on first load (see README "Common Problems" for the workaround).
+- The Ember frontend requires **Node >= 18** (`engines` in `frontend/package.json`, enforced by `engine-strict=true` in `frontend/.npmrc`). `frontend/.nvmrc` pins the version CI builds against; `nvm install` or `asdf install` in `frontend/` picks it up. The build does not work on Node 16 or older, so switch versions rather than bypassing the engine check.
+- `frontend/npm install` needs no `sudo`, `--unsafe-perm` or `--allow-root`, as root or otherwise. If you are tempted to add one, something else is wrong.
+- Env files: `cp backend/env-example backend/.env` and `cp frontend/env-example frontend/.env`. They are read independently — Rails reads `backend/.env`, and `frontend/config/environment.js` loads `frontend/.env` itself (at the top of the file, deliberately: ember-cli evaluates that file before addon config hooks run, so loading `.env` via an addon silently drops the values on a cold build). `FACEBOOK_APP_ID` is only needed for Facebook login.

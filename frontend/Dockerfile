@@ -1,4 +1,4 @@
-FROM node:14.21.3-bullseye
+FROM node:22-bookworm
 
 WORKDIR /app
 
@@ -6,22 +6,19 @@ RUN apt-get update -qq && \
       apt-get install -y --no-install-recommends chromium && \
       rm -rf /var/lib/apt/lists/*
 
-RUN npm i -g npm@6.14.18
-
 COPY bin/docker-entrypoint /usr/local/bin/frontend-entrypoint
 
 RUN chmod +x /usr/local/bin/frontend-entrypoint && \
       chown -R node:node /app
 
 ENV CHROME_BIN=/usr/bin/chromium
-ENV OPENSSL_CONF=/dev/null
 
 USER node
 
 COPY --chown=node:node package*.json bower.json .bowerrc .npmrc ./
 COPY --chown=node:node patches ./patches
 
-RUN npm install && \
+RUN npm ci && \
       { \
         for file in package.json package-lock.json bower.json .bowerrc .npmrc; do \
           [ -f "$file" ] && sha256sum "$file"; \
