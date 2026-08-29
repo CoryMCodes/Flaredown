@@ -1,6 +1,14 @@
 require "rails_helper"
 
 describe UserDataMailer do
+  # ApplicationMailer captures the From address into default_params when the class is
+  # loaded, so stubbing the config it reads would be too late. Override the stored
+  # default instead, rather than depending on whatever SMTP_EMAIL_FROM happens to hold.
+  before do
+    allow(described_class).to receive(:default_params)
+      .and_return(described_class.default_params.merge(from: "from@some.email"))
+  end
+
   describe "trackings_csv" do
     let(:mail) { UserDataMailer.trackings_csv(to_email, "header1,header2\nvalue1, value2\n") }
     let(:to_email) { "some@email.yo" }

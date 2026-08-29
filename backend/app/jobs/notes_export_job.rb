@@ -11,7 +11,7 @@ class NotesExportJob < ActiveJob::Base
     body = note_details.map { |detail| detail.join(",") }
 
     ActionMailer::Base.mail(
-      from: Rails.application.secrets.smtp_email_from,
+      from: Flaredown.config.smtp_email_from,
       to: user.email,
       subject: "Flaredown data export",
       body: body

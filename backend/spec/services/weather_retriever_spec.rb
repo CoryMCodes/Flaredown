@@ -1,6 +1,11 @@
 require "rails_helper"
 
 describe WeatherRetriever, :vcr do
+  # Tomorrowiorb.forecast reads this at call time to build the request URL, and VCR
+  # matches on that URL. It has to be the key the cassettes were recorded with, so
+  # stub it here rather than depending on whatever TOMORROW_IO_KEY happens to hold.
+  before { allow(Tomorrowiorb).to receive(:api_key).and_return("MY_MEGA_TOMORROW_IO_KEY") }
+
   let(:date) { Date.parse "2016-01-06" }
   let(:cassete) { "#{described_class.name}/#{postal_code}" }
   let(:postal_code) { "55403" }

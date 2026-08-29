@@ -14,6 +14,18 @@ module Flaredown
       ENV["REDISCLOUD_URL"].present? ? ENV["REDISCLOUD_URL"] : ENV["REDIS_URL"]
     end
 
+    def base_url
+      ENV["BASE_URL"]
+    end
+
+    def smtp_email_from
+      ENV["SMTP_EMAIL_FROM"]
+    end
+
+    def tomorrow_io_key
+      ENV["TOMORROW_IO_KEY"]
+    end
+
     def trackables_min_popularity
       3
     end
