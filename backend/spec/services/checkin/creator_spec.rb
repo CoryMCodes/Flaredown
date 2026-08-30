@@ -109,6 +109,19 @@ RSpec.describe Checkin::Creator do
       end
     end
 
+    context "when the same trackable has two overlapping active trackings" do
+      # Removing and re-adding a trackable leaves the earlier tracking active
+      # until its end_at passes, overlapping the one that replaced it.
+      let!(:overlapping) do
+        create(:tracking, user: user, trackable: condition, start_at: date - 3.days, end_at: date)
+      end
+
+      it "prefills the trackable once instead of failing the whole checkin" do
+        expect { subject }.not_to raise_error
+        expect(subject.conditions.map(&:condition_id)).to eq [condition.id]
+      end
+    end
+
     context "when postal code is set on previous checkin" do
       let(:weather) { create :weather }
       let(:postal_code) { "55403" }

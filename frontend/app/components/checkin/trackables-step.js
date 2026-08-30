@@ -24,14 +24,24 @@ export default Component.extend(TrackablesFromType, {
 
   setupTracking() {
     this.get('tracking').setup({
-      at: new Date(this.get('checkin.date')),
+      at: this.get('checkinDate'),
       trackableType: this.get('trackableType').capitalize()
     });
   },
 
   checkin: alias('model.checkin'),
-  isTodaysCheckin: computed('checkin', function() {
-    return moment(this.get('checkin.date')).isSame(new Date(), 'day');
+
+  // The backend stamps the user's own calendar date with the server's UTC clock
+  // time, so the date has to be read back in UTC. Reading it in the browser's
+  // zone shifts it a day for every user whose local date differs from UTC's at
+  // the moment the check-in was created, which used to leave added trackables
+  // untracked and therefore missing from the next day's check-in.
+  checkinDate: computed('checkin.date', function() {
+    return moment.utc(this.get('checkin.date')).format('YYYY-MM-DD');
+  }),
+
+  isTodaysCheckin: computed('checkinDate', function() {
+    return this.get('checkinDate') === moment().format('YYYY-MM-DD');
   }),
 
   sortedTrackeds: computed('trackeds.{[],@each.position}', function() {

@@ -165,7 +165,8 @@ class Checkin::Updater
 
   # For trackables that have been added to checkin, look for TrackableUsage records
   # for the current user. When a record exists its count is incremented,
-  # else a new record is created
+  # else a new record is created. Adding a trackable also has to start tracking
+  # it, so that it carries over to the next day's checkin.
   def update_added_trackables_usages(trackable_class_name)
     added_trackables = added_trackables_attrs(
       trackables_attrs(trackable_class_name, permitted_params)
@@ -175,7 +176,36 @@ class Checkin::Updater
     added_trackables.each do |t|
       trackable = trackable_class.find(t[trackable_id_key])
       TrackableUsage.create_or_update_by(user: current_user, trackable: trackable)
+      ensure_tracking(trackable, t[:color_id])
     end
+  end
+
+  # Checkin::Creator prefills a new checkin from the user's active trackings, so
+  # a trackable added to a current checkin has to have one or it silently
+  # disappears the next day while still showing in History. Clients post to
+  # /trackings themselves, so only fill the gap when they have not: any tracking
+  # that has not been ended already carries the trackable forward.
+  def ensure_tracking(trackable, color_id)
+    return unless checkin_is_current?
+    return if current_user.trackings.where(trackable: trackable, end_at: nil).exists?
+
+    # A tracking already starting on this date was ended earlier in the day, so
+    # reopen it instead of adding the second row uniqueness would reject.
+    tracking = current_user.trackings.find_or_initialize_by(
+      trackable: trackable,
+      start_at: checkin.date.to_date
+    )
+    tracking.end_at = nil
+    tracking.color_id ||= color_id.presence
+    tracking.save!
+  end
+
+  # A checkin's date is the user's own calendar date, which is up to a day
+  # either side of the server's UTC one. Anything further back is the user
+  # backfilling an old checkin, which must not change what they track from here
+  # on.
+  def checkin_is_current?
+    (checkin.date.to_date - Date.current).to_i.abs <= 1
   end
 
   def added_trackables_attrs(trackables_attrs)

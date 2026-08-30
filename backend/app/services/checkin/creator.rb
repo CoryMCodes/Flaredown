@@ -17,7 +17,12 @@ class Checkin::Creator
       checkin.weather_id = WeatherRetriever.get(date, checkin.position.postal_code)&.id
     end
 
+    # Removing and re-adding the same trackable on one day leaves both trackings
+    # active until the first one's end_at passes. Building nested attributes for
+    # both breaks Checkin::Condition's per-checkin uniqueness validation, which
+    # would take the whole checkin creation down rather than just the duplicate.
     active_trackings = user.trackings.includes(:trackable).active_at(date)
+      .uniq { |tracking| [tracking.trackable_type, tracking.trackable_id] }
     condition_attrs = []
     symptom_attrs = []
     treatment_attrs = []

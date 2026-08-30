@@ -204,4 +204,86 @@ RSpec.describe Checkin::Updater do
       end
     end
   end
+
+  context "trackings" do
+    let(:condition) { create(:condition) }
+    let(:params) do
+      ActionController::Parameters.new(
+        id: checkin.id.to_s,
+        checkin: {
+          conditions_attributes: [{condition_id: condition.id, color_id: "7"}]
+        }
+      )
+    end
+
+    context "when a trackable is added to a current checkin" do
+      it "starts tracking it so it carries over to the next day" do
+        expect(subject.conditions.map(&:condition_id)).to include condition.id
+
+        tracking = user.trackings.find_by(trackable: condition)
+        expect(tracking).to be_present
+        expect(tracking.start_at).to eq checkin.date.to_date
+        expect(tracking.end_at).to be_nil
+        expect(tracking.color_id).to eq 7
+      end
+
+      it "prefills the next day's checkin with the added trackable" do
+        subject
+        next_checkin = Checkin::Creator.new(user.id, checkin.date.to_date + 1.day).create!
+        expect(next_checkin.conditions.map(&:condition_id)).to include condition.id
+      end
+    end
+
+    context "when the checkin's date is a day off the server's, as it is for users away from UTC" do
+      let(:checkin) { create(:checkin, user_id: user.id, date: Time.zone.today + 1.day) }
+
+      it "still starts tracking the added trackable" do
+        subject
+        expect(user.trackings.find_by(trackable: condition)).to be_present
+      end
+    end
+
+    context "when the client has already tracked the trackable itself" do
+      let!(:existing) { create(:tracking, :active, user: user, trackable: condition) }
+
+      it "does not create a second tracking" do
+        subject
+        expect(user.trackings.where(trackable: condition).count).to eq 1
+      end
+    end
+
+    context "when the trackable was tracked and then untracked before" do
+      let!(:ended) do
+        create(:tracking, user: user, trackable: condition, start_at: Time.zone.today - 7.days,
+          end_at: Time.zone.today - 3.days)
+      end
+
+      it "starts tracking it again" do
+        subject
+        expect(user.trackings.where(trackable: condition, end_at: nil).count).to eq 1
+      end
+    end
+
+    context "when a tracking starting on the checkin's date was already ended" do
+      let!(:ended_today) do
+        create(:tracking, user: user, trackable: condition,
+          start_at: checkin.date.to_date, end_at: Time.zone.today)
+      end
+
+      it "reopens it rather than failing on the uniqueness validation" do
+        expect { subject }.not_to raise_error
+        expect(user.trackings.where(trackable: condition).count).to eq 1
+        expect(ended_today.reload.end_at).to be_nil
+      end
+    end
+
+    context "when backfilling an old checkin" do
+      let(:checkin) { create(:checkin, user_id: user.id, date: Time.zone.today - 5.days) }
+
+      it "does not change what the user tracks from here on" do
+        subject
+        expect(user.trackings.find_by(trackable: condition)).to be_nil
+      end
+    end
+  end
 end
